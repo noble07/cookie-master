@@ -1,15 +1,19 @@
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { GetServerSideProps } from 'next'
 
-import { Layout } from '@/components/layouts'
-import { Card, CardContent, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from '@mui/material'
 import Cookies from 'js-cookie'
+import axios from 'axios'
 
-const ThemeChangerpage: React.FC = (props) => {
+import { Layout } from '@/components/layouts'
+import { Button, Card, CardContent, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from '@mui/material'
 
-  console.log({props})
+interface ThemeChangerpageProps {
+  theme: string
+}
 
-  const [currentTheme, setCurrentTheme] = useState('light')
+const ThemeChangerpage = ({ theme }: ThemeChangerpageProps) => {
+
+  const [currentTheme, setCurrentTheme] = useState(theme)
 
   const onThemeChange = (e: ChangeEvent<HTMLInputElement>) =>{
     const selectedTheme = e.target.value
@@ -17,6 +21,19 @@ const ThemeChangerpage: React.FC = (props) => {
 
     Cookies.set('theme', selectedTheme)
   }
+
+  const onClick = async() => {
+    const { data } = await axios.get('/api/hello')
+
+    console.log({ data })
+  }
+
+  useEffect(() => {
+    
+    console.log('Cookies:', Cookies.get('theme'))
+    
+  }, [])
+  
 
   return (
     <Layout>
@@ -33,6 +50,12 @@ const ThemeChangerpage: React.FC = (props) => {
               <FormControlLabel value="custom" control={<Radio />} label="Custom" />
             </RadioGroup>
           </FormControl>
+
+          <Button
+            onClick={onClick}
+          >
+            Solicitud
+          </Button>
         </CardContent>
       </Card>
     </Layout>
@@ -45,10 +68,12 @@ const ThemeChangerpage: React.FC = (props) => {
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   
   const { theme = 'light', name = 'No name' } = req.cookies
+
+  const validThemes = ['light', 'dark', 'custom']
   
   return {
     props: {
-      theme,
+      theme: validThemes.includes(theme) ? theme : 'dark',
       name
     }
   }
